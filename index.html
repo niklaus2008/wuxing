@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五行知识 - 中国传统文化学习平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --wood-color: #2E8B57;
+            --fire-color: #FF6347;
+            --earth-color: #DAA520;
+            --metal-color: #C0C0C0;
+            --water-color: #4682B4;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .element-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .element-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .wood-theme { background: linear-gradient(135deg, #2E8B57, #90EE90); }
+        .fire-theme { background: linear-gradient(135deg, #FF6347, #FFB6C1); }
+        .earth-theme { background: linear-gradient(135deg, #DAA520, #F0E68C); }
+        .metal-theme { background: linear-gradient(135deg, #C0C0C0, #E6E6FA); }
+        .water-theme { background: linear-gradient(135deg, #4682B4, #87CEEB); }
+        .section-divider {
+            background: linear-gradient(90deg, transparent, #DAA520, transparent);
+            height: 2px;
+            margin: 3rem 0;
+        }
+        .calculator-result {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            height: 400px;
+            margin: 2rem 0;
+        }
+        .nav-tab {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .nav-tab:hover {
+            background-color: rgba(218, 165, 32, 0.1);
+        }
+        .nav-tab.active {
+            background-color: rgba(218, 165, 32, 0.2);
+            border-bottom: 3px solid #DAA520;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .floating-element {
+            position: fixed;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 2rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: -2rem;
+            width: 2px;
+            background: linear-gradient(to bottom, #DAA520, transparent);
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: #DAA520;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-explanation {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 4px solid #2196f3;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .correct-answer {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .wrong-answer {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .learning-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .learning-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .interactive-element {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .interactive-element:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 浮动装饰元素 -->
+    <div class="floating-element" style="top: 10%; left: 5%; animation-delay: 0s;">🌳</div>
+    <div class="floating-element" style="top: 20%; right: 5%; animation-delay: 1s;">🔥</div>
+    <div class="floating-element" style="top: 40%; left: 10%; animation-delay: 2s;">🏔️</div>
+    <div class="floating-element" style="top: 60%; right: 10%; animation-delay: 3s;">⚔️</div>
+    <div class="floating-element" style="top: 80%; left: 15%; animation-delay: 4s;">💧</div>
+
+    <!-- 头部 -->
+    <header class="bg-gradient-to-r from-yellow-600 via-red-600 to-blue-600 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">五行知识</h1>
+            <p class="text-lg md:text-xl opacity-90">探索中国古代哲学的智慧</p>
+        </div>
+    </header>
+
+    <!-- 导航 -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center space-x-1 md:space-x-2">
+                <div class="nav-tab px-3 py-3 active" onclick="showSection('basics')">
+                    <i class="fas fa-book mr-2"></i>五行基础
+                </div>
+                <div class="nav-tab px-3 py-3" onclick="showSection('knowledge')">
+                    <i class="fas fa-university mr-2"></i>知识普及
+                </div>
+                <div class="nav-tab px-3 py-3" onclick="showSection('relations')">
+                    <i class="fas fa-project-diagram mr-2"></i>相生相克
+                </div>
+                <div class="nav-tab px-3 py-3" onclick="showSection('calculator')">
+                    <i class="fas fa-calculator mr-2"></i>五行计算
+                </div>
+                <div class="nav-tab px-3 py-3" onclick="showSection('applications')">
+                    <i class="fas fa-star mr-2"></i>实际应用
+                </div>
+                <div class="nav-tab px-3 py-3" onclick="showSection('quiz')">
+                    <i class="fas fa-question-circle mr-2"></i>竞赛答题
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 五行基础知识 -->
+        <section id="basics" class="content-section active">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行基础知识</h2>
+                <p class="text-lg text-gray-600 max-w-4xl mx-auto">
+                    五行，即木、火、土、金、水，是中国古代哲学的重要概念。它认为这五种物质是构成世界万物的基本元素，
+                    并以其相生相克的关系来阐释事物之间的相互联系和变化规律。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+                <!-- 木 -->
+                <div class="element-card wood-theme text-white rounded-lg p-6 text-center interactive-element">
+                    <div class="text-6xl mb-4">🌳</div>
+                    <h3 class="text-2xl font-bold mb-3">木</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>特性：</strong>生发、条达、生长</p>
+                        <p><strong>方位：</strong>东方</p>
+                        <p><strong>季节：</strong>春季</p>
+                        <p><strong>脏腑：</strong>肝、胆</p>
+                        <p><strong>情志：</strong>怒</p>
+                    </div>
+                </div>
+
+                <!-- 火 -->
+                <div class="element-card fire-theme text-white rounded-lg p-6 text-center interactive-element">
+                    <div class="text-6xl mb-4">🔥</div>
+                    <h3 class="text-2xl font-bold mb-3">火</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>特性：</strong>炎热、向上、发散</p>
+                        <p><strong>方位：</strong>南方</p>
+                        <p><strong>季节：</strong>夏季</p>
+                        <p><strong>脏腑：</strong>心、小肠</p>
+                        <p><strong>情志：</strong>喜</p>
+                    </div>
+                </div>
+
+                <!-- 土 -->
+                <div class="element-card earth-theme text-white rounded-lg p-6 text-center interactive-element">
+                    <div class="text-6xl mb-4">🏔️</div>
+                    <h3 class="text-2xl font-bold mb-3">土</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>特性：</strong>承载、稳定、厚重</p>
+                        <p><strong>方位：</strong>中央</p>
+                        <p><strong>季节：</strong>长夏</p>
+                        <p><strong>脏腑：</strong>脾、胃</p>
+                        <p><strong>情志：</strong>思</p>
+                    </div>
+                </div>
+
+                <!-- 金 -->
+                <div class="element-card metal-theme text-white rounded-lg p-6 text-center interactive-element">
+                    <div class="text-6xl mb-4">⚔️</div>
+                    <h3 class="text-2xl font-bold mb-3">金</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>特性：</strong>收敛、凝聚、坚硬</p>
+                        <p><strong>方位：</strong>西方</p>
+                        <p><strong>季节：</strong>秋季</p>
+                        <p><strong>脏腑：</strong>肺、大肠</p>
+                        <p><strong>情志：</strong>悲</p>
+                    </div>
+                </div>
+
+                <!-- 水 -->
+                <div class="element-card water-theme text-white rounded-lg p-6 text-center interactive-element">
+                    <div class="text-6xl mb-4">💧</div>
+                    <h3 class="text-2xl font-bold mb-3">水</h3>
+                    <div class="space-y-2 text-sm">
+                        <p><strong>特性：</strong>润下、寒冷、滋润</p>
+                        <p><strong>方位：</strong>北方</p>
+                        <p><strong>季节：</strong>冬季</p>
+                        <p><strong>脏腑：</strong>肾、膀胱</p>
+                        <p><strong>情志：</strong>恐</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 五行属性详细表格 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h3 class="text-2xl font-bold text-center mb-6">五行属性对照表</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">属性</th>
+                                <th class="px-4 py-2 text-center">木</th>
+                                <th class="px-4 py-2 text-center">火</th>
+                                <th class="px-4 py-2 text-center">土</th>
+                                <th class="px-4 py-2 text-center">金</th>
+                                <th class="px-4 py-2 text-center">水</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="px-4 py-2 font-semibold">方位</td>
+                                <td class="px-4 py-2 text-center">东</td>
+                                <td class="px-4 py-2 text-center">南</td>
+                                <td class="px-4 py-2 text-center">中</td>
+                                <td class="px-4 py-2 text-center">西</td>
+                                <td class="px-4 py-2 text-center">北</td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-2 font-semibold">季节</td>
+                                <td class="px-4 py-2 text-center">春</td>
+                                <td class="px-4 py-2 text-center">夏</td>
+                                <td class="px-4 py-2 text-center">长夏</td>
+                                <td class="px-4 py-2 text-center">秋</td>
+                                <td class="px-4 py-2 text-center">冬</td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-2 font-semibold">颜色</td>
+                                <td class="px-4 py-2 text-center">青绿</td>
+                                <td class="px-4 py-2 text-center">红</td>
+                                <td class="px-4 py-2 text-center">黄</td>
+                                <td class="px-4 py-2 text-center">白</td>
+                                <td class="px-4 py-2 text-center">黑</td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-2 font-semibold">脏腑</td>
+                                <td class="px-4 py-2 text-center">肝胆</td>
+                                <td class="px-4 py-2 text-center">心小肠</td>
+                                <td class="px-4 py-2 text-center">脾胃</td>
+                                <td class="px-4 py-2 text-center">肺大肠</td>
+                                <td class="px-4 py-2 text-center">肾膀胱</td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-2 font-semibold">情志</td>
+                                <td class="px-4 py-2 text-center">怒</td>
+                                <td class="px-4 py-2 text-center">喜</td>
+                                <td class="px-4 py-2 text-center">思</td>
+                                <td class="px-4 py-2 text-center">悲</td>
+                                <td class="px-4 py-2 text-center">恐</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 知识普及专页 -->
+        <section id="knowledge" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行文化知识普及</h2>
+                <p class="text-lg text-gray-600">深入了解五行学说的历史渊源、哲学内涵与现代应用</p>
+            </div>
+
+            <!-- 历史渊源 -->
+            <div class="learning-card mb-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">📚 历史渊源</h3>
+                <div class="space-y-6">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">远古起源（约5000年前）</h4>
+                            <p class="text-gray-700">五行观念最早可追溯到远古时期，古人通过观察自然现象，发现木、火、土、金、水这五种物质在自然界中的基本作用和相互关系。</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">春秋战国时期（公元前8-3世纪）</h4>
+                            <p class="text-gray-700">五行学说在春秋战国时期得到系统化发展，《尚书·洪范》首次明确提出"五行"概念，奠定了五行理论的基础框架。</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">汉代（公元前206-220年）</h4>
+                            <p class="text-gray-700">董仲舒等学者进一步完善五行理论，将其与阴阳学说结合，形成了完整的阴阳五行理论体系，成为中国古代自然哲学的重要组成部分。</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">现代发展</h4>
+                            <p class="text-gray-700">现代学者通过科学方法重新审视五行理论，发现其在系统论、生态学等现代科学中的价值，为传统文化的现代化传承提供了新的视角。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 哲学内涵 -->
+            <div class="learning-card mb-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">🧠 哲学内涵</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold mb-3 text-blue-800">
+                            <i class="fas fa-balance-scale mr-2"></i>整体观念
+                        </h4>
+                        <p class="text-gray-700">五行学说强调事物的整体性和系统性，认为万事万物都是相互联系、相互影响的有机整体，体现了古代中国人的整体思维方式。</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold mb-3 text-green-800">
+                            <i class="fas fa-sync-alt mr-2"></i>动态平衡
+                        </h4>
+                        <p class="text-gray-700">通过相生相克的关系，五行学说揭示了事物发展变化的内在规律，强调在对立统一中维持动态平衡，这与现代系统论的观念不谋而合。</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold mb-3 text-yellow-800">
+                            <i class="fas fa-infinity mr-2"></i>循环思维
+                        </h4>
+                        <p class="text-gray-700">五行相生形成无穷循环，体现了中国古代的循环时间观念，认为事物的发展是螺旋式上升的过程，而非简单的线性发展。</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold mb-3 text-purple-800">
+                            <i class="fas fa-puzzle-piece mr-2"></i>类比思维
+                        </h4>
+                        <p class="text-gray-700">五行学说运用类比的方法，将自然界的现象与人体、社会等各个层面进行对应，形成了独特的认知方式和思维模式。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 现代应用 -->
+            <div class="learning-card mb-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">🌟 现代应用与价值</h3>
+                <div class="space-y-6">
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <h4 class="text-lg font-semibold mb-2">科学研究领域</h4>
+                        <p class="text-gray-700 mb-2">现代科学发现五行理论在系统科学、生态学、信息论等领域具有参考价值：</p>
+                        <ul class="list-disc list-inside text-sm space-y-1 text-gray-600">
+                            <li>生态系统的相互制约关系与五行相克原理相似</li>
+                            <li>生物链的循环机制体现了五行相生的思想</li>
+                            <li>系统论中的反馈调节机制与五行平衡理念一致</li>
+                        </ul>
+                    </div>
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <h4 class="text-lg font-semibold mb-2">医学健康领域</h4>
+                        <p class="text-gray-700 mb-2">五行理论在现代医学和健康管理中的应用：</p>
+                        <ul class="list-disc list-inside text-sm space-y-1 text-gray-600">
+                            <li>中医诊断治疗的理论基础</li>
+                            <li>营养学中的食物性味归经理论</li>
+                            <li>心理健康中的情志调节方法</li>
+                            <li>预防医学中的体质辨识应用</li>
+                        </ul>
+                    </div>
+                    <div class="border-l-4 border-yellow-500 pl-4">
+                        <h4 class="text-lg font-semibold mb-2">设计与艺术领域</h4>
+                        <p class="text-gray-700 mb-2">五行美学在现代设计中的运用：</p>
+                        <ul class="list-disc list-inside text-sm space-y-1 text-gray-600">
+                            <li>建筑设计中的空间布局和材料选择</li>
+                            <li>园林设计中的植物配置和景观搭配</li>
+                            <li>室内设计中的色彩搭配和风水布局</li>
+                            <li>产品设计中的形态和功能平衡</li>
+                        </ul>
+                    </div>
+                    <div class="border-l-4 border-red-500 pl-4">
+                        <h4 class="text-lg font-semibold mb-2">管理与教育领域</h4>
+                        <p class="text-gray-700 mb-2">五行思维在现代管理中的启示：</p>
+                        <ul class="list-disc list-inside text-sm space-y-1 text-gray-600">
+                            <li>团队建设中的人员配置和角色分工</li>
+                            <li>企业管理中的平衡发展策略</li>
+                            <li>教育心理学中的因材施教方法</li>
+                            <li>领导力培养中的综合素质提升</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学习方法 -->
+            <div class="learning-card">
+                <h3 class="text-2xl font-bold mb-6 text-center">📖 学习五行的方法与技巧</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-eye text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-semibold mb-2">观察自然</h4>
+                        <p class="text-sm text-gray-600">通过观察四季变化、自然现象来理解五行的基本特性和相互关系。</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-hands text-2xl text-green-600"></i>
+                        </div>
+                        <h4 class="font-semibold mb-2">实践体验</h4>
+                        <p class="text-sm text-gray-600">将五行知识应用到日常生活中，如饮食调理、运动养生等实践活动。</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-comments text-2xl text-yellow-600"></i>
+                        </div>
+                        <h4 class="font-semibold mb-2">交流讨论</h4>
+                        <p class="text-sm text-gray-600">与他人分享学习心得，通过讨论加深对五行理论的理解和认识。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 五行相生相克关系 -->
+        <section id="relations" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行相生相克关系</h2>
+                <p class="text-lg text-gray-600">相生相克是五行学说的核心，体现了事物之间的相互作用和平衡关系</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-green-600">五行相生</h3>
+                    <div class="chart-container" id="shengChart"></div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <p><span class="font-semibold">木生火：</span>木材燃烧生火，为火提供燃料</p>
+                        <p><span class="font-semibold">火生土：</span>火焚烧后产生灰烬，丰富土壤</p>
+                        <p><span class="font-semibold">土生金：</span>土中蕴藏金属矿物，孕育金属</p>
+                        <p><span class="font-semibold">金生水：</span>金属表面凝结水珠，聚集水分</p>
+                        <p><span class="font-semibold">水生木：</span>水滋养树木生长，促进繁茂</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-red-600">五行相克</h3>
+                    <div class="chart-container" id="keChart"></div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <p><span class="font-semibold">木克土：</span>树根穿透土壤，吸收养分</p>
+                        <p><span class="font-semibold">土克水：</span>土能阻挡和吸收水流</p>
+                        <p><span class="font-semibold">水克火：</span>水能扑灭火焰，制约火势</p>
+                        <p><span class="font-semibold">火克金：</span>烈火能够熔化金属</p>
+                        <p><span class="font-semibold">金克木：</span>金属工具可以砍伐树木</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 相生相克的深层含义 -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-2xl font-bold text-center mb-6">相生相克的深层含义</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3 text-green-600">相生关系的意义</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• <strong>资生</strong>：前者为后者提供物质基础</li>
+                            <li>• <strong>促进</strong>：前者推动后者的发展</li>
+                            <li>• <strong>转化</strong>：能量和物质的相互转换</li>
+                            <li>• <strong>循环</strong>：形成永不停息的循环系统</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-3 text-red-600">相克关系的意义</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• <strong>制约</strong>：防止某一元素过度发展</li>
+                            <li>• <strong>平衡</strong>：维持系统的动态平衡</li>
+                            <li>• <strong>调节</strong>：自动调节机制的体现</li>
+                            <li>• <strong>稳定</strong>：保持整体系统的稳定</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 五行计算器 -->
+        <section id="calculator" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行属性计算器</h2>
+                <p class="text-lg text-gray-600">根据您的出生日期，计算您的五行属性</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">出生日期</label>
+                    <input type="date" id="birthDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">出生时间（可选）</label>
+                    <select id="birthTime" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="">请选择时辰</option>
+                        <option value="子时">子时 (23:00-01:00)</option>
+                        <option value="丑时">丑时 (01:00-03:00)</option>
+                        <option value="寅时">寅时 (03:00-05:00)</option>
+                        <option value="卯时">卯时 (05:00-07:00)</option>
+                        <option value="辰时">辰时 (07:00-09:00)</option>
+                        <option value="巳时">巳时 (09:00-11:00)</option>
+                        <option value="午时">午时 (11:00-13:00)</option>
+                        <option value="未时">未时 (13:00-15:00)</option>
+                        <option value="申时">申时 (15:00-17:00)</option>
+                        <option value="酉时">酉时 (17:00-19:00)</option>
+                        <option value="戌时">戌时 (19:00-21:00)</option>
+                        <option value="亥时">亥时 (21:00-23:00)</option>
+                    </select>
+                </div>
+
+                <button onclick="calculateWuxing()" class="w-full bg-gradient-to-r from-yellow-600 to-red-600 text-white py-3 px-6 rounded-md hover:opacity-90 transition-opacity text-lg font-semibold">
+                    <i class="fas fa-calculator mr-2"></i>计算五行属性
+                </button>
+
+                <div id="calculatorResult" class="mt-6"></div>
+            </div>
+        </section>
+
+        <!-- 实际应用 -->
+        <section id="applications" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行实际应用</h2>
+                <p class="text-lg text-gray-600">五行学说在各个领域的实际应用</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="learning-card text-center interactive-element">
+                    <div class="text-4xl mb-4">🏥</div>
+                    <h3 class="text-xl font-bold mb-3">中医养生</h3>
+                    <ul class="text-sm space-y-2 text-left">
+                        <li>• 脏腑归属诊断</li>
+                        <li>• 药物性味分类</li>
+                        <li>• 饮食调养指导</li>
+                        <li>• 情志调节方法</li>
+                    </ul>
+                </div>
+
+                <div class="learning-card text-center interactive-element">
+                    <div class="text-4xl mb-4">🏠</div>
+                    <h3 class="text-xl font-bold mb-3">风水布局</h3>
+                    <ul class="text-sm space-y-2 text-left">
+                        <li>• 方位配置规划</li>
+                        <li>• 颜色搭配选择</li>
+                        <li>• 材质选择建议</li>
+                        <li>• 植物摆放指导</li>
+                    </ul>
+                </div>
+
+                <div class="learning-card text-center interactive-element">
+                    <div class="text-4xl mb-4">🔮</div>
+                    <h3 class="text-xl font-bold mb-3">命理分析</h3>
+                    <ul class="text-sm space-y-2 text-left">
+                        <li>• 八字命盘分析</li>
+                        <li>• 性格特征解读</li>
+                        <li>• 运势变化预测</li>
+                        <li>• 改运方法建议</li>
+                    </ul>
+                </div>
+
+                <div class="learning-card text-center interactive-element">
+                    <div class="text-4xl mb-4">🍃</div>
+                    <h3 class="text-xl font-bold mb-3">生活指导</h3>
+                    <ul class="text-sm space-y-2 text-left">
+                        <li>• 饮食营养调理</li>
+                        <li>• 运动养生建议</li>
+                        <li>• 作息时间安排</li>
+                        <li>• 情绪管理方法</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 竞赛答题 -->
+        <section id="quiz" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">五行知识竞赛答题</h2>
+                <p class="text-lg text-gray-600">测试您对五行知识的理解程度，每题都有详细解释</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div id="quizContainer" class="bg-white rounded-lg shadow-lg p-8">
+                    <div id="questionContainer">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 id="questionTitle" class="text-xl font-bold flex-1"></h3>
+                            <span id="questionCounter" class="text-gray-600 ml-4"></span>
+                        </div>
+                        <div id="optionsContainer" class="space-y-3 mb-6"></div>
+                        <div id="explanationContainer" class="mb-6" style="display: none;"></div>
+                        <div class="flex justify-between">
+                            <button id="prevBtn" onclick="previousQuestion()" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" style="display: none;">
+                                <i class="fas fa-arrow-left mr-2"></i>上一题
+                            </button>
+                            <div id="actionButtons" class="ml-auto">
+                                <button id="submitBtn" onclick="submitAnswer()" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors mr-2">
+                                    <i class="fas fa-check mr-2"></i>提交答案
+                                </button>
+                                <button id="nextBtn" onclick="nextQuestion()" class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors" style="display: none;">
+                                    <i class="fas fa-arrow-right mr-2"></i>下一题
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="quizResult" class="text-center" style="display: none;">
+                        <h3 class="text-2xl font-bold mb-4">测试结果</h3>
+                        <div id="scoreDisplay" class="text-4xl font-bold mb-4"></div>
+                        <div id="scoreComment" class="text-lg mb-6"></div>
+                        <div id="detailedResults" class="text-left mb-6"></div>
+                        <button onclick="restartQuiz()" class="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            <i class="fas fa-redo mr-2"></i>重新开始
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">© 2024 五行知识学习平台 - 传承中华文化智慧</p>
+            <p class="text-sm opacity-75">探索五行奥秘，感悟古代哲学</p>
+        </div>
+    </footer>
+
+    <script>
+        // 导航切换功能
+        function showSection(sectionId) {
+            // 隐藏所有内容区域
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 移除所有导航标签的激活状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示目标内容区域
+            document.getElementById(sectionId).classList.add('active');
+            
+            // 激活对应的导航标签
+            event.target.closest('.nav-tab').classList.add('active');
+            
+            // 如果切换到关系图，初始化图表
+            if (sectionId === 'relations') {
+                setTimeout(() => {
+                    initRelationCharts();
+                }, 100);
+            }
+            
+            // 如果切换到问答，初始化问答
+            if (sectionId === 'quiz') {
+                setTimeout(() => {
+                    initQuiz();
+                }, 100);
+            }
+        }
+
+        // 初始化相生相克关系图表
+        function initRelationCharts() {
+            // 相生关系图
+            const shengChart = echarts.init(document.getElementById('shengChart'));
+            const shengOption = {
+                series: [{
+                    type: 'graph',
+                    layout: 'circular',
+                    data: [
+                        { name: '木', value: 1, symbolSize: 60, itemStyle: { color: '#2E8B57' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '火', value: 1, symbolSize: 60, itemStyle: { color: '#FF6347' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '土', value: 1, symbolSize: 60, itemStyle: { color: '#DAA520' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '金', value: 1, symbolSize: 60, itemStyle: { color: '#C0C0C0' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '水', value: 1, symbolSize: 60, itemStyle: { color: '#4682B4' }, label: { fontSize: 16, fontWeight: 'bold' } }
+                    ],
+                    links: [
+                        { source: '木', target: '火', lineStyle: { color: '#32CD32', width: 3 } },
+                        { source: '火', target: '土', lineStyle: { color: '#32CD32', width: 3 } },
+                        { source: '土', target: '金', lineStyle: { color: '#32CD32', width: 3 } },
+                        { source: '金', target: '水', lineStyle: { color: '#32CD32', width: 3 } },
+                        { source: '水', target: '木', lineStyle: { color: '#32CD32', width: 3 } }
+                    ],
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: { width: 5 }
+                    },
+                    label: {
+                        show: true
+                    }
+                }]
+            };
+            shengChart.setOption(shengOption);
+
+            // 相克关系图
+            const keChart = echarts.init(document.getElementById('keChart'));
+            const keOption = {
+                series: [{
+                    type: 'graph',
+                    layout: 'circular',
+                    data: [
+                        { name: '木', value: 1, symbolSize: 60, itemStyle: { color: '#2E8B57' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '火', value: 1, symbolSize: 60, itemStyle: { color: '#FF6347' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '土', value: 1, symbolSize: 60, itemStyle: { color: '#DAA520' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '金', value: 1, symbolSize: 60, itemStyle: { color: '#C0C0C0' }, label: { fontSize: 16, fontWeight: 'bold' } },
+                        { name: '水', value: 1, symbolSize: 60, itemStyle: { color: '#4682B4' }, label: { fontSize: 16, fontWeight: 'bold' } }
+                    ],
+                    links: [
+                        { source: '木', target: '土', lineStyle: { color: '#FF0000', width: 3 } },
+                        { source: '土', target: '水', lineStyle: { color: '#FF0000', width: 3 } },
+                        { source: '水', target: '火', lineStyle: { color: '#FF0000', width: 3 } },
+                        { source: '火', target: '金', lineStyle: { color: '#FF0000', width: 3 } },
+                        { source: '金', target: '木', lineStyle: { color: '#FF0000', width: 3 } }
+                    ],
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: { width: 5 }
+                    },
+                    label: {
+                        show: true
+                    }
+                }]
+            };
+            keChart.setOption(keOption);
+
+            // 响应式调整
+            window.addEventListener('resize', () => {
+                shengChart.resize();
+                keChart.resize();
+            });
+        }
+
+        // 五行计算器
+        function calculateWuxing() {
+            const birthDate = document.getElementById('birthDate').value;
+            const birthTime = document.getElementById('birthTime').value;
+            
+            if (!birthDate) {
+                alert('请选择出生日期');
+                return;
+            }
+
+            const date = new Date(birthDate);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+
+            // 简化的五行计算（基于年份天干地支）
+            const tianGan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+            const diZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+            const wuxingMap = {
+                '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', 
+                '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水'
+            };
+
+            const yearTianGan = tianGan[(year - 4) % 10];
+            const yearDiZhi = diZhi[(year - 4) % 12];
+            const yearWuxing = wuxingMap[yearTianGan];
+
+            // 根据月份和日期计算其他属性
+            const monthWuxing = getMonthWuxing(month);
+            const dayWuxing = getDayWuxing(day);
+
+            const result = `
+                <div class="calculator-result">
+                    <h3 class="text-2xl font-bold text-center mb-4">您的五行属性分析</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="text-center p-4 bg-white bg-opacity-50 rounded">
+                            <h4 class="font-bold">年柱</h4>
+                            <p>${yearTianGan}${yearDiZhi}年 - ${yearWuxing}</p>
+                        </div>
+                        <div class="text-center p-4 bg-white bg-opacity-50 rounded">
+                            <h4 class="font-bold">月柱</h4>
+                            <p>${month}月 - ${monthWuxing}</p>
+                        </div>
+                        <div class="text-center p-4 bg-white bg-opacity-50 rounded">
+                            <h4 class="font-bold">日柱</h4>
+                            <p>${day}日 - ${dayWuxing}</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="text-xl font-bold mb-2">主要五行属性：${yearWuxing}</h4>
+                        <p class="text-sm">${getWuxingDescription(yearWuxing)}</p>
+                        ${birthTime ? `<p class="mt-2 text-sm">时辰：${birthTime}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('calculatorResult').innerHTML = result;
+        }
+
+        function getMonthWuxing(month) {
+            const monthWuxing = ['水', '水', '木', '木', '土', '火', '火', '土', '金', '金', '土', '水'];
+            return monthWuxing[month - 1];
+        }
+
+        function getDayWuxing(day) {
+            const cycle = ['金', '水', '木', '火', '土'];
+            return cycle[day % 5];
+        }
+
+        function getWuxingDescription(wuxing) {
+            const descriptions = {
+                '木': '性格开朗，富有创造力，善于成长和发展，具有领导能力。',
+                '火': '热情奔放，积极主动，善于表达，具有很强的感染力。',
+                '土': '踏实稳重，诚实可靠，善于包容，具有很强的责任心。',
+                '金': '意志坚强，做事果断，善于决策，具有很强的执行力。',
+                '水': '聪明智慧，适应能力强，善于变通，具有很强的学习能力。'
+            };
+            return descriptions[wuxing] || '';
+        }
+
+        // 增强的问答系统
+        const quizData = [
+            {
+                question: '五行中，哪个元素代表东方？',
+                options: ['木', '火', '土', '金'],
+                correct: 0,
+                explanation: {
+                    reason: '木代表东方是五行方位理论的基础。',
+                    knowledge: '五行方位对应：木-东、火-南、土-中、金-西、水-北。这个对应关系来源于古人对自然现象的观察，太阳从东方升起，象征着生机和生长，与木的特性相符。',
+                    memory: '记忆技巧：想象"木"字像一棵树，太阳从东方升起照射着大树生长。',
+                    application: '在风水布局中，房屋的东方适合放置植物或绿色装饰，有利于家人的健康和事业发展。'
+                }
+            },
+            {
+                question: '火生土的含义是什么？',
+                options: ['火焰点燃土壤', '火焚烧后产生灰烬', '火热的土地', '火山爆发'],
+                correct: 1,
+                explanation: {
+                    reason: '火生土指的是火焚烧后产生的灰烬回归土地，丰富了土壤的养分。',
+                    knowledge: '这个过程体现了能量转化的自然规律。植物燃烧后的灰烬含有丰富的矿物质，如钾、磷等，能够改善土壤的肥力。古代农业中，火耕（刀耕火种）就利用了这个原理。',
+                    memory: '记忆方法：想象篝火燃尽后留下的灰烬洒在土地上，让土地更加肥沃。',
+                    application: '现代园艺中，草木灰是很好的钾肥，体现了火生土的实际应用价值。'
+                }
+            },
+            {
+                question: '在五行相克中，水克什么？',
+                options: ['木', '火', '土', '金'],
+                correct: 1,
+                explanation: {
+                    reason: '水克火是最直观的相克关系，水能扑灭火焰。',
+                    knowledge: '水克火的原理在于水的寒凉性质能够降低火的温度，同时水蒸发时吸收大量热量。这种相克关系在自然界中随处可见，如雨水灭山火、消防员用水灭火等。',
+                    memory: '记忆要点：想象用水浇灭蜡烛火焰的场景，这是生活中最常见的水克火现象。',
+                    application: '在中医理论中，用寒凉的药物治疗热性疾病，体现了水克火的治疗原理。'
+                }
+            },
+            {
+                question: '五行中属于秋季的元素是？',
+                options: ['木', '火', '土', '金'],
+                correct: 3,
+                explanation: {
+                    reason: '金属于秋季，对应收获、收敛的特性。',
+                    knowledge: '秋季万物成熟收获，金的收敛、凝聚特性与秋季的自然现象相符。秋季树叶凋零，果实成熟，体现了从发散到收敛的转变过程。金的坚硬、锋利特性也象征着秋季的肃杀之气。',
+                    memory: '联想记忆：秋季是收获黄金般果实的季节，"金秋"这个词就体现了金与秋季的对应关系。',
+                    application: '在养生方面，秋季应注意养肺（肺属金），多吃白色食物，如梨、银耳等。'
+                }
+            },
+            {
+                question: '中医理论中，肝属于哪个五行？',
+                options: ['木', '火', '土', '水'],
+                correct: 0,
+                explanation: {
+                    reason: '肝属木，具有疏泄、条达的功能，与木的生发特性相符。',
+                    knowledge: '肝主疏泄，调节气机，使全身气血运行通畅，就像树木枝条向四周伸展一样。肝还主筋，控制人体的运动功能。肝的情志为怒，怒伤肝，这在中医诊断和治疗中有重要意义。',
+                    memory: '记忆方法：肝脏像树木一样需要"透气"和"伸展"，压抑愤怒会伤害肝脏。',
+                    application: '春季养肝很重要，因为春天属木，是肝气最旺盛的季节，应保持心情舒畅，多做伸展运动。'
+                }
+            },
+            {
+                question: '五行中代表中央方位的是？',
+                options: ['木', '火', '土', '金'],
+                correct: 2,
+                explanation: {
+                    reason: '土居中央，具有承载、稳定的特性，是其他四行的基础。',
+                    knowledge: '土在五行中起着特殊的作用，它不仅代表中央方位，还代表长夏（夏秋之交），具有化生万物的功能。土能生万物，也能载万物，体现了包容和承载的品格。',
+                    memory: '记忆技巧：大地承载万物，位于中央，是一切生命的基础和归宿。',
+                    application: '在建筑风水中，房屋的中央位置（土位）不宜受污或堆放杂物，应保持清洁整齐。'
+                }
+            },
+            {
+                question: '水的特性不包括以下哪个？',
+                options: ['润下', '寒冷', '滋润', '炎热'],
+                correct: 3,
+                explanation: {
+                    reason: '炎热是火的特性，与水的寒冷特性相反。',
+                    knowledge: '水具有润下（向下流动）、寒冷、滋润的特性。润下体现了水的流动性和重力作用；寒冷是水的温度特征；滋润体现了水对生命的滋养作用。这些特性决定了水在自然界和人体中的重要作用。',
+                    memory: '对比记忆：水是冷的，火是热的；水往下流，火往上升；这些都是相对的特性。',
+                    application: '在中医治疗中，水类药物多性寒凉，用于治疗热性疾病和滋润干燥。'
+                }
+            },
+            {
+                question: '金生水的原理是？',
+                options: ['金属融化', '金属生锈', '金属表面凝结水珠', '金属导电'],
+                correct: 2,
+                explanation: {
+                    reason: '金生水主要指金属表面在温差作用下凝结水珠的现象。',
+                    knowledge: '当温度较低时，空气中的水蒸气会在金属表面凝结成水珠，这是"金生水"最直观的表现。另外，金属熔化后变成液体，也体现了从固态金到液态水的转化过程。',
+                    memory: '生活实例：夏天从冰箱取出的金属罐子表面会凝结水珠，这就是金生水的现象。',
+                    application: '现代建筑中的冷凝水回收系统就利用了这个原理，将空调金属管道上的冷凝水收集利用。'
+                }
+            },
+            {
+                question: '五行相生的正确顺序是？',
+                options: ['木→火→金→土→水', '木→火→土→金→水', '木→土→火→金→水', '木→水→火→土→金'],
+                correct: 1,
+                explanation: {
+                    reason: '五行相生的正确顺序是：木生火、火生土、土生金、金生水、水生木。',
+                    knowledge: '这个顺序体现了自然界物质循环的基本规律。木燃烧生火，火产生灰烬归土，土中孕育金属，金属凝聚水分，水滋养植物生长。这个循环是无穷无尽的，体现了中国古代的循环哲学思想。',
+                    memory: '记忆口诀：木火土金水，生生不息转。想象一个完整的自然循环过程。',
+                    application: '在治疗疾病时，可以通过强化相生关系来调理身体，如肾水不足时，可以通过补金（肺）来生水（肾）。'
+                }
+            },
+            {
+                question: '在五行理论中，情志"怒"对应哪个脏腑？',
+                options: ['心', '肝', '脾', '肺'],
+                correct: 1,
+                explanation: {
+                    reason: '怒伤肝，肝主疏泄，与情绪调节密切相关。',
+                    knowledge: '中医认为，不同的情志对应不同的脏腑：怒伤肝、喜伤心、思伤脾、悲伤肺、恐伤肾。肝主疏泄，负责调节全身的气机，当情绪波动过大特别是愤怒时，会影响肝的疏泄功能。',
+                    memory: '联想记忆：愤怒时我们常说"气得肝疼"，这正体现了怒与肝的对应关系。',
+                    application: '现代医学也证实，长期愤怒、压抑会影响肝功能，保持心情舒畅对肝脏健康很重要。'
+                }
+            }
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let quizStarted = false;
+        let answerSubmitted = false;
+
+        function initQuiz() {
+            if (!quizStarted) {
+                currentQuestion = 0;
+                userAnswers = [];
+                quizStarted = true;
+                answerSubmitted = false;
+                showQuestion();
+            }
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= quizData.length) {
+                showQuizResult();
+                return;
+            }
+
+            const question = quizData[currentQuestion];
+            document.getElementById('questionTitle').textContent = `第${currentQuestion + 1}题：${question.question}`;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option-item p-3 border rounded cursor-pointer hover:bg-gray-100 transition-colors';
+                optionElement.innerHTML = `
+                    <input type="radio" name="answer" value="${index}" id="option${index}" class="mr-2">
+                    <label for="option${index}" class="cursor-pointer">${option}</label>
+                `;
+                optionElement.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            document.getElementById('questionCounter').textContent = `${currentQuestion + 1} / ${quizData.length}`;
+            
+            // 重置按钮状态
+            document.getElementById('prevBtn').style.display = currentQuestion === 0 ? 'none' : 'inline-block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('explanationContainer').style.display = 'none';
+            
+            answerSubmitted = false;
+        }
+
+        function selectOption(index) {
+            if (answerSubmitted) return;
+            
+            userAnswers[currentQuestion] = index;
+            document.querySelectorAll('.option-item').forEach((item, i) => {
+                item.classList.remove('bg-blue-100');
+                if (i === index) {
+                    item.classList.add('bg-blue-100');
+                }
+            });
+            document.querySelector(`input[value="${index}"]`).checked = true;
+        }
+
+        function submitAnswer() {
+            if (userAnswers[currentQuestion] === undefined) {
+                alert('请选择一个答案');
+                return;
+            }
+            
+            answerSubmitted = true;
+            const question = quizData[currentQuestion];
+            const userAnswer = userAnswers[currentQuestion];
+            const isCorrect = userAnswer === question.correct;
+            
+            // 显示答案结果
+            document.querySelectorAll('.option-item').forEach((item, index) => {
+                const input = item.querySelector('input');
+                item.style.pointerEvents = 'none';
+                
+                if (index === question.correct) {
+                    item.classList.add('correct-answer');
+                    item.classList.remove('bg-blue-100');
+                } else if (index === userAnswer && !isCorrect) {
+                    item.classList.add('wrong-answer');
+                    item.classList.remove('bg-blue-100');
+                }
+            });
+            
+            // 显示详细解释
+            showExplanation(question, isCorrect);
+            
+            // 更新按钮状态
+            document.getElementById('submitBtn').style.display = 'none';
+            if (currentQuestion < quizData.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                const finishBtn = document.createElement('button');
+                finishBtn.className = 'px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors';
+                finishBtn.innerHTML = '<i class="fas fa-flag-checkered mr-2"></i>查看结果';
+                finishBtn.onclick = () => showQuizResult();
+                document.getElementById('actionButtons').appendChild(finishBtn);
+            }
+        }
+
+        function showExplanation(question, isCorrect) {
+            const explanationContainer = document.getElementById('explanationContainer');
+            const explanation = question.explanation;
+            
+            explanationContainer.innerHTML = `
+                <div class="quiz-explanation">
+                    <div class="mb-4">
+                        <h4 class="text-lg font-semibold mb-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}">
+                            <i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} mr-2"></i>
+                            ${isCorrect ? '回答正确！' : '回答错误'}
+                        </h4>
+                        <p class="text-gray-700"><strong>正确答案：</strong>${question.options[question.correct]}</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-3 rounded">
+                            <h5 class="font-semibold text-blue-800 mb-2"><i class="fas fa-lightbulb mr-2"></i>解释说明</h5>
+                            <p class="text-sm text-gray-700">${explanation.reason}</p>
+                        </div>
+                        
+                        <div class="bg-green-50 p-3 rounded">
+                            <h5 class="font-semibold text-green-800 mb-2"><i class="fas fa-book-open mr-2"></i>知识拓展</h5>
+                            <p class="text-sm text-gray-700">${explanation.knowledge}</p>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <h5 class="font-semibold text-yellow-800 mb-2"><i class="fas fa-brain mr-2"></i>记忆技巧</h5>
+                            <p class="text-sm text-gray-700">${explanation.memory}</p>
+                        </div>
+                        
+                        <div class="bg-purple-50 p-3 rounded">
+                            <h5 class="font-semibold text-purple-800 mb-2"><i class="fas fa-hand-point-right mr-2"></i>实际应用</h5>
+                            <p class="text-sm text-gray-700">${explanation.application}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            explanationContainer.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function showQuizResult() {
+            document.getElementById('questionContainer').style.display = 'none';
+            document.getElementById('quizResult').style.display = 'block';
+            
+            let correctCount = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === quizData[index].correct) {
+                    correctCount++;
+                }
+            });
+            
+            const score = Math.round((correctCount / quizData.length) * 100);
+            document.getElementById('scoreDisplay').textContent = `${correctCount}/${quizData.length} (${score}分)`;
+            
+            let comment = '';
+            if (score >= 90) {
+                comment = '🎉 优秀！您对五行知识掌握得非常好！';
+            } else if (score >= 70) {
+                comment = '👍 良好！您对五行知识有较好的理解。';
+            } else if (score >= 60) {
+                comment = '📚 及格！继续学习，加深对五行知识的理解。';
+            } else {
+                comment = '💪 需要加强！建议重新学习五行基础知识。';
+            }
+            document.getElementById('scoreComment').textContent = comment;
+            
+            // 显示详细结果
+            let detailedHTML = '<h4 class="text-lg font-semibold mb-4">答题详情：</h4><div class="space-y-3">';
+            userAnswers.forEach((answer, index) => {
+                const question = quizData[index];
+                const isCorrect = answer === question.correct;
+                detailedHTML += `
+                    <div class="p-3 rounded border-l-4 ${isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}">
+                        <p class="font-medium">第${index + 1}题: ${question.question}</p>
+                        <p class="text-sm mt-1">
+                            您的答案: ${question.options[answer]} 
+                            ${isCorrect ? '✅' : '❌ 正确答案: ' + question.options[question.correct]}
+                        </p>
+                    </div>
+                `;
+            });
+            detailedHTML += '</div>';
+            document.getElementById('detailedResults').innerHTML = detailedHTML;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            userAnswers = [];
+            quizStarted = false;
+            answerSubmitted = false;
+            document.getElementById('questionContainer').style.display = 'block';
+            document.getElementById('quizResult').style.display = 'none';
+            initQuiz();
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            document.getElementById('birthDate').valueAsDate = new Date();
+        });
+    </script>
+</body>
+</html>
